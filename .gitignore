@@ -21,4 +21,5 @@ lerna-debug.log*
 .env
 .npmrc
 
+.stryker-tmp/
 local.ts
