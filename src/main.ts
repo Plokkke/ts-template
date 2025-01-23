@@ -1,9 +1,9 @@
 import { NestFactory } from '@nestjs/core';
+import { NestExpressApplication } from '@nestjs/platform-express';
 import { utilities as nestWinstonModuleUtilities, WinstonModule } from 'nest-winston';
 import * as winston from 'winston';
 
 import { configureAppModule } from '@/app.module';
-import { AppService } from '@/app.service';
 import { loadEnv } from '@/environment';
 
 (async () => {
@@ -25,12 +25,12 @@ import { loadEnv } from '@/environment';
   logger.info(`Use log level: ${logLevel}`);
 
   const env = loadEnv(logger);
-  const app = await NestFactory.createApplicationContext(configureAppModule(env), {
+  const app = await NestFactory.create<NestExpressApplication>(configureAppModule(env), {
     logger: WinstonModule.createLogger({
       instance: logger,
     }),
   });
 
-  const appService = app.get<AppService>(AppService);
-  await appService.run();
+  await app.listen(env.server.port);
+  logger.info(`Application is listening on: ${await app.getUrl()}`);
 })();
