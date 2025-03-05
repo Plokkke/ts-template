@@ -1,5 +1,6 @@
-import { Logger } from 'winston';
 import { z } from 'zod';
+
+import { logger } from '@/services/logger';
 
 export const environmentVariablesSchema = z
   .object({
@@ -11,7 +12,7 @@ export const environmentVariablesSchema = z
 
 export type EnvironmentVariables = z.infer<typeof environmentVariablesSchema>;
 
-export function loadEnv(logger: Logger): EnvironmentVariables {
+export function loadEnv(): EnvironmentVariables {
   const config = environmentVariablesSchema.parse(process.env);
   logger.debug(`Parsed environment variables ${JSON.stringify(config, null, 2)}`);
   return config;
