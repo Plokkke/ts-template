@@ -7,8 +7,10 @@
   ],
   "coveragePathIgnorePatterns": [
     "schemas/",
-    "schemas\\.ts",
+    "\\.schema\\.ts",
+    "\\.module\\.ts",
     "local\\.ts",
+    "main\\.ts",
     "global\\.d\\.ts"
   ],
   "coverageReporters": [

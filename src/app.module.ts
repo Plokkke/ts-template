@@ -1,38 +1,26 @@
 import { Module, NestModule } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { z } from 'zod';
+import { APP_PIPE } from '@nestjs/core';
+import { HealthModule } from '@plokkke/nest-health-registry';
+import { ZodValidationPipe } from 'nestjs-zod';
+import { z as zod } from 'zod';
+import { errorMap } from 'zod-validation-error';
 
-import { EnvironmentVariables } from '@/environment';
-import { HealthModule } from '@/modules/health/health.module';
+zod.setErrorMap(errorMap);
 
-// TODO: Define the configuration schema
-export const configSchema = z.object({
-  logLevel: z.string(),
-  server: z.object({
-    port: z.number(),
-  }),
-  universalAnswer: z.number(),
-});
+export const configSchema = zod.object({});
 
-export type Config = z.infer<typeof configSchema>;
+export type Config = zod.infer<typeof configSchema>;
 
-export function loadConfig(env: EnvironmentVariables): Config {
-  return configSchema.parse({
-    logLevel: env.logLevel,
-    server: env.server,
-    universalAnswer: 42,
-  });
-}
-
-export function configureAppModule(env: EnvironmentVariables): new () => NestModule {
+export async function configureAppModule(config: Config): Promise<new () => NestModule> {
   @Module({
-    imports: [ConfigModule.forRoot({ load: [() => loadConfig(env)] }), HealthModule],
+    imports: [ConfigModule.forRoot({ load: [() => config], isGlobal: true }), HealthModule],
     controllers: [],
-    providers: [],
+    providers: [{ provide: APP_PIPE, useClass: ZodValidationPipe }],
   })
-  class App implements NestModule {
+  class AppModule implements NestModule {
     configure(): void {}
   }
 
-  return App;
+  return AppModule;
 }

@@ -4,7 +4,7 @@ module.exports = {
   ...sharedConfig,
   "rootDir": "..",
   coverageDirectory: '<rootDir>/reports/tests/unit/coverage',
-  coveragePathIgnorePatterns: [...sharedConfig.coveragePathIgnorePatterns],
+  coveragePathIgnorePatterns: [...sharedConfig.coveragePathIgnorePatterns, '\\.controller\\.ts'],
   testRegex: '\\.spec\\.ts$',
   testTimeout: 16,
 };

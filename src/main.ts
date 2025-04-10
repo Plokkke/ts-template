@@ -1,36 +1,42 @@
+import { Logger } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
-import { NestExpressApplication } from '@nestjs/platform-express';
-import { utilities as nestWinstonModuleUtilities, WinstonModule } from 'nest-winston';
-import * as winston from 'winston';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { patchNestJsSwagger } from 'nestjs-zod';
 
 import { configureAppModule } from '@/app.module';
 import { loadEnv } from '@/environment';
+import { RequtesLoggerInterceptor } from '@/interceptors/requests-logger';
+import { logger } from '@/services/logger';
+import { WinstonModule } from 'nest-winston';
 
 (async () => {
-  const logLevel = process.env.LOG_LEVEL || (process.env.NODE_ENV === 'production' ? 'info' : 'debug');
-  const logger = winston.createLogger({
-    transports: [
-      new winston.transports.Console({
-        format: winston.format.combine(
-          winston.format.timestamp(),
-          winston.format.ms(),
-          nestWinstonModuleUtilities.format.nestLike('AppName', {
-            appName: false,
-          }),
-        ),
-        level: logLevel,
-      }),
-    ],
-  });
-  logger.info(`Use log level: ${logLevel}`);
-
-  const env = loadEnv(logger);
-  const app = await NestFactory.create<NestExpressApplication>(configureAppModule(env), {
-    logger: WinstonModule.createLogger({
-      instance: logger,
-    }),
+  const env = loadEnv();
+  const config = {
+    env,
+  };
+  const app = await NestFactory.create(await configureAppModule(config), {
+    logger: WinstonModule.createLogger({ instance: logger }),
   });
 
-  await app.listen(env.server.port);
-  logger.info(`Application is listening on: ${await app.getUrl()}`);
+  app.useGlobalInterceptors(new RequtesLoggerInterceptor());
+
+  patchNestJsSwagger();
+  const optionsFederate = new DocumentBuilder()
+    .setTitle('Identity Gateway API')
+    .setVersion('1.0')
+    .addBearerAuth()
+    .build();
+
+  const groupDocument = SwaggerModule.createDocument(app, optionsFederate);
+  SwaggerModule.setup('/swagger', app, groupDocument, {
+    jsonDocumentUrl: '/swagger/openapi.json',
+    patchDocumentOnRequest: (request, response, document) => {
+      document.openapi = '3.1.0';
+      return document;
+    },
+  });
+
+  await app.listen(Number.parseInt(process.env.PORT ?? '3000', 10), () => {
+    Logger.log(`Server started on port ${process.env.PORT}`);
+  });
 })();

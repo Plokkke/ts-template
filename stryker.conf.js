@@ -1,23 +1,29 @@
 module.exports = {
   packageManager: 'npm',
   incrementalFile: 'reports/tests/stryker/incremental.json',
-  reporters: ['html', 'progress','dashboard'],
-  htmlReporter: { fileName: "reports/tests/stryker/index.html"},
+  reporters: ['html', 'progress', 'dashboard'],
+  htmlReporter: { fileName: 'reports/tests/stryker/index.html' },
   testRunner: 'jest',
   coverageAnalysis: 'perTest',
   disableTypeChecks: '**/*.ts',
   jest: {
     configFile: 'test/jest-unit.js',
+    enableFindRelatedTests: true,
   },
   checkers: ['typescript'],
   tsconfigFile: 'tsconfig.json',
   incremental: true,
   ignoreStatic: true,
-  cleanTempDir: 'always',
   mutate: [
     'src/**/*.ts',
     '!**/schemas/**',
-    '!**/*.schemas.ts',
-    '!src/local.ts',
+    '!**/*.schema.ts',
+    '!**/local.ts',
+    '!**/index.ts',
   ],
+  thresholds: {
+    high: 100,
+    low: 100,
+    break: 100
+  }
 };

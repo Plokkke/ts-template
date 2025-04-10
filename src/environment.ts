@@ -1,22 +1,16 @@
-import { Logger } from 'winston';
+import { Logger } from '@nestjs/common';
 import { z } from 'zod';
 
-export const environmentVariablesSchema = z
-  .object({
-    LOG_LEVEL: z.string(),
-    PORT: z.coerce.number().optional().default(3000),
-  })
-  .transform((env) => ({
-    logLevel: env.LOG_LEVEL,
-    server: {
-      port: env.PORT,
-    },
-  }));
+export const environmentVariablesSchema = z.object({
+  ENV: z.string(),
+  LOG_LEVEL: z.enum(['error', 'warn', 'info', 'verbose', 'debug', 'silly']).optional().default('info'),
+  PORT: z.string().transform((value) => parseInt(value, 10)),
+});
 
 export type EnvironmentVariables = z.infer<typeof environmentVariablesSchema>;
 
-export function loadEnv(logger: Logger): EnvironmentVariables {
+export function loadEnv(): EnvironmentVariables {
   const config = environmentVariablesSchema.parse(process.env);
-  logger.debug(`Parsed environment variables ${JSON.stringify(config, null, 2)}`);
+  Logger.debug(`Parsed environment variables ${JSON.stringify(config, null, 2)}`);
   return config;
 }
